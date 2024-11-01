@@ -1,4 +1,5 @@
 using Dotnet.Homeworks.Data.DatabaseContext;
+using Dotnet.Homeworks.Data.Extensions;
 using Dotnet.Homeworks.MainProject.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddSingleton<IRegistrationService, RegistrationService>();
 builder.Services.AddSingleton<ICommunicationService, CommunicationService>();
+builder.Services.AddDataLayer(builder.Configuration.GetConnectionString("Default")!);
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie();
