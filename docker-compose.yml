@@ -12,8 +12,19 @@ services:
     volumes:
       - dotnet_postgres_data:/var/lib/postgresql/data
     
-#  dotnet_rabbitmq:
-#    image: rabbitmq:3-alpine
+  dotnet_rabbitmq:
+    image: rabbitmq:3.13.7-management
+    hostname: rabbitmq
+    restart: unless-stopped
+    environment:
+      - RABBITMQ_DEFAULT_USER=superlogin
+      - RABBITMQ_DEFAULT_PASS=superpassword
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error},{default,error}] disk_free_limit 1677721600
+    volumes:
+      - dotnet_rabbitmq_data:/var/lib/rabbitmq/data
+    ports:
+      - 15672:15672
+      - 5672:5672
     
 #  dotnet_minio:
 #    image: minio/minio:latest
@@ -34,16 +45,38 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://*:80"
       ConnectionStrings__Default: "User ID=postgres;Password=postgres;Host=dotnet_postgres;Port=5432;Database=Dotnet.Homeworks"
+      RabbitMqConfig__Username: "superlogin"
+      RabbitMqConfig__Password: "superpassword"
+      RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
     ports:
       - "9000:80"
     depends_on:
       - dotnet_postgres
+      - dotnet_rabbitmq
       
-#  dotnet_mailing:
-#    image: dotnet-web
+  dotnet_mailing:
+    image: dotnet-mailing
+    build:
+      context: .
+      dockerfile: Dotnet.Homeworks.Mailing.API/Dockerfile
+    container_name: dotnet-mailing
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RabbitMqConfig__Username: "superlogin"
+      RabbitMqConfig__Password: "superpassword"
+      RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
+      EmailConfig__Email: "s1ches@yandex.ru"
+      EmailConfig_Host: "smtp.yandex.ru"
+      EmailConfig__Port : "465"
+      EmailConfig__Password : "bisoacxatmawvoon"
+    ports:
+      - "9001:80"
+    depends_on:
+      - dotnet_rabbitmq
     
 #  dotnet_storage:
 #    image: dotnet-web
 
 volumes:
   dotnet_postgres_data:
+  dotnet_rabbitmq_data:

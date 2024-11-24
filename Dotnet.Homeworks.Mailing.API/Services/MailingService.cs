@@ -17,7 +17,7 @@ public class MailingService : IMailingService
         _emailConfig = emailConfig.Value;
     }
 
-    public async Task<Result> SendEmailAsync(EmailMessage emailDto)
+    public async Task<Result> SendEmailAsync(EmailMessage emailDto, CancellationToken cancellationToken = default)
     {
         using var message = new MimeMessage();
         message.From.Add(new MailboxAddress("Testing mailing api", _emailConfig.Email));
@@ -31,10 +31,10 @@ public class MailingService : IMailingService
         using var client = new SmtpClient();
         try
         {
-            await client.ConnectAsync(_emailConfig.Host, _emailConfig.Port, SecureSocketOptions.StartTls);
-            await client.AuthenticateAsync(_emailConfig.Email, _emailConfig.Password);
-            await client.SendAsync(message);
-            await client.DisconnectAsync(true);
+            await client.ConnectAsync(_emailConfig.Host, _emailConfig.Port, true, cancellationToken);
+            await client.AuthenticateAsync(_emailConfig.Email, _emailConfig.Password, cancellationToken);
+            await client.SendAsync(message, cancellationToken);
+            await client.DisconnectAsync(true, cancellationToken);
             return new Result(true);
         }
         catch (Exception ex)
